@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "224935622421",
+    "firebase_url": "https://camera6-27edd.firebaseio.com",
+    "project_id": "camera6-27edd",
+    "storage_bucket": "camera6-27edd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:224935622421:android:e7cbe4bd1de55e6d",
+        "android_client_info": {
+          "package_name": "com.example.wearable.camera6"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "224935622421-vi86p720uhabrqk2qt53id0adj2vb7vc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.wearable.camera6",
+            "certificate_hash": "c78207867862dafc70f428f45f2ce5d1f2f31dec"
+          }
+        },
+        {
+          "client_id": "224935622421-9j8l0rp3r7gcpl8o4k7sp9nuhl36gt05.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAG6KXUU0pfj1-5cykbldI9zWMLrxgaRCc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "224935622421-9j8l0rp3r7gcpl8o4k7sp9nuhl36gt05.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
