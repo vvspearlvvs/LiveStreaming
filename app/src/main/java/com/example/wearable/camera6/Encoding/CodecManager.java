@@ -33,10 +33,10 @@ public class CodecManager {
 	public final static String TAG = "CodecManager";
 
 	public static final int[] SUPPORTED_COLOR_FORMATS = {
-		MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
-		MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar,
-		MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
-		MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar,
+		MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar, //21
+		MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar, //39
+		MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar, //19
+		MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar, //20
 		MediaCodecInfo.CodecCapabilities.COLOR_TI_FormatYUV420PackedSemiPlanar
 	};		
 

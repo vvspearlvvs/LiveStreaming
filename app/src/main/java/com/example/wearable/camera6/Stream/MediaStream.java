@@ -31,8 +31,6 @@ import android.util.Log;
 
 import com.example.wearable.camera6.Rtp.AbstractPacketizer;
 import com.example.wearable.camera6.Audio.AudioStream;
-
-import com.example.wearable.camera6.Session.Stream;
 import com.example.wearable.camera6.Video.VideoStream;
 
 import java.io.IOException;
@@ -105,16 +103,17 @@ public abstract class MediaStream implements Stream {
 			Class.forName("android.media.MediaCodec");
 			// Will be set to MODE_MEDIACODEC_API at some point...
 			sSuggestedMode = MODE_MEDIACODEC_API;
-			Log.i(TAG,"Phone supports the MediaCoded API");
+			Log.i(TAG,"MediaCoded API 사용가능");
 		} catch (ClassNotFoundException e) {
 			sSuggestedMode = MODE_MEDIARECORDER_API;
-			Log.i(TAG,"Phone does not support the MediaCodec API");
+			Log.i(TAG,"MediaCodec API 사용불가 -> MediaRecorder API 사용");
 		}
 		
 		// Starting lollipop, the LocalSocket API cannot be used anymore to feed 
 		// a MediaRecorder object for security reasons
 		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
 			sPipeApi = PIPE_API_PFD;
+			//sPipeApi = PIPE_API_LS;
 			Log.i(TAG,"만들어진 파이프: parecleFileDescriptor");
 		} else {
 			sPipeApi = PIPE_API_LS;
@@ -126,6 +125,7 @@ public abstract class MediaStream implements Stream {
 	public MediaStream() {
 		mRequestedMode = sSuggestedMode;
 		mMode = sSuggestedMode;
+		Log.i(TAG,"제안하는 모드"+sSuggestedMode+": MediaCodec사용");
 	}
 
 	/** 
@@ -280,13 +280,14 @@ public abstract class MediaStream implements Stream {
 			throw new IllegalStateException("No destination ports set for the stream !");
 
 		mPacketizer.setTimeToLive(mTTL);
-		
-		if (mMode != MODE_MEDIARECORDER_API) {
+
+
+	if (mMode != MODE_MEDIARECORDER_API) { //지금 제안하는모드2: MeidaCodec api방법
 			encodeWithMediaCodec();
-			//Log.i(TAG,"인코딩방법(1:mediaRecorder / 2:mediaCodec )"+mMode);
+			Log.i(TAG,"인코딩방법)MediaCodec방법 모드:"+mMode);
 		} else {
 			encodeWithMediaRecorder();
-			//Log.i(TAG,"인코딩방법(1:mediaRecorder / 2:mediaCodec )"+mMode);
+			Log.i(TAG,"인코딩방법)mediaRecorder방법 모드:"+mMode);
 
 		}
 
@@ -303,11 +304,13 @@ public abstract class MediaStream implements Stream {
 					mMediaRecorder = null;
 					closeSockets();
 					mPacketizer.stop();
+					Log.i(TAG,"인코딩방법)MediaRecorder 중지");
 				} else {
 					mPacketizer.stop();
 					mMediaCodec.stop();
 					mMediaCodec.release();
 					mMediaCodec = null;
+                    Log.i(TAG,"인코딩방법)MediaCodec 중지");
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -337,14 +340,16 @@ public abstract class MediaStream implements Stream {
 	
 	protected void createSockets() throws IOException {
 
+	    Log.i(TAG,"인코딩방법)MediaRecorder일떄 localserver열 수 있는 파이프"+sPipeApi);
 		if (sPipeApi == PIPE_API_LS) {
 			
-			final String LOCAL_ADDR = "net.majorkernelpanic.streaming-";
+			final String LOCAL_ADDR = "com.example.wearable.camera6-";
 	
 			for (int i=0;i<10;i++) {
 				try {
 					mSocketId = new Random().nextInt();
 					mLss = new LocalServerSocket(LOCAL_ADDR+mSocketId);
+					Log.i(TAG,"인코딩방법)MediaRecorder일떄 localserver소켓열기"+mLss);
 					break;
 				} catch (IOException e1) {}
 			}
@@ -355,7 +360,8 @@ public abstract class MediaStream implements Stream {
 			mReceiver.setSoTimeout(3000);
 			mSender = mLss.accept();
 			mSender.setSendBufferSize(500000);
-			
+			Log.i(TAG,"버퍼크기"+mReceiver.getReceiveBufferSize());
+
 		} else {
 			Log.e(TAG, "parcelFileDescriptors createPipe version = Lollipop");
 

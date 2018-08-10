@@ -48,6 +48,8 @@ public class AACLATMPacketizer extends AbstractPacketizer implements Runnable {
 		if (t==null) {
 			t = new Thread(this);
 			t.start();
+			Log.i(TAG, "@오디오)MediaCodec으로 인코딩할때 패킷:AACLATMP");
+
 		}
 	}
 

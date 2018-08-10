@@ -23,6 +23,8 @@ import java.net.UnknownHostException;
 
 public class FirstActivity extends AppCompatActivity {
 
+    public final static String TAG = "FirstActivity";
+
     private final String[] PERMISSIONS = {
             Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -65,7 +67,7 @@ public class FirstActivity extends AppCompatActivity {
 
                 Intent intent2 = new Intent(getApplicationContext(), RtspServer.class);
                 startService(intent2);
-                Log.i("SERVICE","서버연결 서비스 시작");
+                Log.i(TAG,"RTSP server 서비스로 시작");
             }
         });
 

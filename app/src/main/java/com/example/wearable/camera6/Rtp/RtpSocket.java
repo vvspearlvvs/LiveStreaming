@@ -93,7 +93,7 @@ public class RtpSocket implements Runnable {
 		for (int i=0; i<mBufferCount; i++) {
 
 			mBuffers[i] = new byte[MTU];
-			mPackets[i] = new DatagramPacket(mBuffers[i], 1);
+			mPackets[i] = new DatagramPacket(mBuffers[i], 1); //버퍼에 들어온게 전송할 데이터이다.
 
 			/*							     Version(2)  Padding(0)					 					*/
 			/*									 ^		  ^			Extension(0)						*/
@@ -115,6 +115,7 @@ public class RtpSocket implements Runnable {
 
 		try {
 		mSocket = new MulticastSocket();
+
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
 		}
@@ -176,6 +177,7 @@ public class RtpSocket implements Runnable {
 				mPackets[i].setAddress(dest);
 			}
 			mReport.setDestination(dest, rtcpPort);
+			//아직 클라이언트랑 연결안되어 있으면 null, 연결되면 dest결정됨.
 		}
 	}
 	
@@ -186,7 +188,7 @@ public class RtpSocket implements Runnable {
 	 */ 
 	public void setOutputStream(OutputStream outputStream, byte channelIdentifier) {
 		if (outputStream != null) {
-			mTransport = TRANSPORT_TCP;
+			mTransport = TRANSPORT_UDP; //#tcp->udp로 바꿈
 			mOutputStream = outputStream;
 			mTcpHeader[1] = channelIdentifier;
 			mReport.setOutputStream(outputStream, (byte) (channelIdentifier+1));
@@ -273,7 +275,7 @@ public class RtpSocket implements Runnable {
 	/** The Thread sends the packets in the FIFO one by one at a constant rate. */
 	@Override
 	public void run() {
-		Statistics stats = new Statistics(50,3000);
+		//Statistics stats = new Statistics(50,3000);
 		try {
 			// Caches mCacheSize milliseconds of the stream in the FIFO.
 			Thread.sleep(mCacheSize);
@@ -283,11 +285,11 @@ public class RtpSocket implements Runnable {
 					// We use our knowledge of the clock rate of the stream and the difference between two timestamps to
 					// compute the time lapse that the packet represents.
 					if ((mTimestamps[mBufferOut]-mOldTimestamp)>0) {
-						stats.push(mTimestamps[mBufferOut]-mOldTimestamp);
-						long d = stats.average()/1000000;
+						//stats.push(mTimestamps[mBufferOut]-mOldTimestamp);
+					//	long d = stats.average()/1000000;
 						//Log.d(TAG,"delay: "+d+" d: "+(mTimestamps[mBufferOut]-mOldTimestamp)/1000000);
 						// We ensure that packets are sent at a constant and suitable rate no matter how the RtpSocket is used.
-						if (mCacheSize>0) Thread.sleep(d);
+					//	if (mCacheSize>0) Thread.sleep(d);
 					} else if ((mTimestamps[mBufferOut]-mOldTimestamp)<0) {
 						Log.e(TAG, "TS: "+mTimestamps[mBufferOut]+" OLD: "+mOldTimestamp);
 					}
@@ -301,7 +303,8 @@ public class RtpSocket implements Runnable {
 				mOldTimestamp = mTimestamps[mBufferOut];
 				if (mCount++>30) {
 					if (mTransport == TRANSPORT_UDP) {
-						mSocket.send(mPackets[mBufferOut]);
+						mSocket.send(mPackets[mBufferOut]); //데이터전송함
+					//	Log.i(TAG,"스트리밍무한반복###UDP로 데이터 전송 중");
 					} else {
 						sendTCP();
 					}
@@ -399,54 +402,6 @@ public class RtpSocket implements Runnable {
 		}
 		
 	}
-	
-	/** Computes the proper rate at which packets are sent. */
-	protected static class Statistics {
 
-		public final static String TAG = "Statistics";
-		
-		private int count=500, c = 0;
-		private float m = 0, q = 0;
-		private long elapsed = 0;
-		private long start = 0;
-		private long duration = 0;
-		private long period = 6000000000L;
-		private boolean initoffset = false;
-
-		public Statistics(int count, long period) {
-			this.count = count;
-			this.period = period*1000000L; 
-		}
-		
-		public void push(long value) {
-			duration += value;
-			elapsed += value;
-			if (elapsed>period) {
-				elapsed = 0;
-				long now = System.nanoTime();
-				if (!initoffset || (now - start < 0)) {
-					start = now;
-					duration = 0;
-					initoffset = true;
-				}
-				value -= (now - start) - duration;
-				//Log.d(TAG, "sum1: "+duration/1000000+" sum2: "+(now-start)/1000000+" drift: "+((now-start)-duration)/1000000+" v: "+value/1000000);
-			}
-			if (c<40) {
-				// We ignore the first 40 measured values because they may not be accurate
-				c++;
-				m = value;
-			} else {
-				m = (m*q+value)/(q+1);
-				if (q<count) q++;
-			}
-		}
-		
-		public long average() {
-			long l = (long)m-2000000;
-			return l>0 ? l : 0;
-		}
-
-	}
 
 }

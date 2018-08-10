@@ -132,6 +132,7 @@ public class EncoderDebugger {
 
 	/** This {@link NV21Convertor} will do the necessary work to feed properly the encoder. */
 	public NV21Convertor getNV21Convertor() {
+		Log.i(TAG,"NV21로 바꾸기");
 		return mNV21;
 	}
 
@@ -177,7 +178,6 @@ public class EncoderDebugger {
 			mNV21.setColorPanesReversed(mPreferences.getBoolean(PREF_PREFIX+resolution+"reversed", false));
 			mEncoderName = mPreferences.getString(PREF_PREFIX+resolution+"encoderName", "");
 			mEncoderColorFormat = mPreferences.getInt(PREF_PREFIX+resolution+"colorFormat", 0);
-			Log.i(TAG,"컬러포맷"+mEncoderColorFormat);
 			mB64PPS = mPreferences.getString(PREF_PREFIX+resolution+"pps", "");
 			mB64SPS = mPreferences.getString(PREF_PREFIX+resolution+"sps", "");
 

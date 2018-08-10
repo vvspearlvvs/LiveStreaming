@@ -63,21 +63,22 @@ public class NV21Convertor {
 	}
 	
 	public int getBufferSize() {
-		return 3*mSize/2;
+		return  3*mSize/2;
 	}
 	
 	public void setEncoderColorFormat(int colorFormat) {
 		switch (colorFormat) {
-		case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar:
-		case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar:
+		case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar: //21
+		case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar: //39
 		case MediaCodecInfo.CodecCapabilities.COLOR_TI_FormatYUV420PackedSemiPlanar:
 			setPlanar(false);
 			break;	
-		case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar:
-		case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar:
+		case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar: //19
+		case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar: //20
 			setPlanar(true);
 			break;
 		}
+		Log.i(TAG,"컬러포맷YUV형태로바꾸기"+colorFormat);
 	}
 	
 	public void setColorPanesReversed(boolean b) {

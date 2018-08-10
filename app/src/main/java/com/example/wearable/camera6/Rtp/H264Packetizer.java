@@ -241,7 +241,7 @@ public class H264Packetizer extends AbstractPacketizer implements Runnable {
 		int sum = 0, len;
 		while (sum<length) {
 			len = is.read(buffer, offset+sum, length-sum); //인코딩한 데이터 받아온 길이
-			Log.i(TAG,"인코딩한 데이터 받아온 길이"+len);
+			//Log.i(TAG,"인코딩한 데이터 받아온 길이"+len);
 			if (len<0) {
 				throw new IOException("End of stream");
 			}

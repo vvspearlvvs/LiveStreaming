@@ -43,6 +43,8 @@ import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * A class for streaming AAC from the camera of an android device using RTP.
@@ -188,6 +190,7 @@ public class AACStream extends AudioStream {
 	@Override
 	protected void encodeWithMediaRecorder() throws IOException {
 		testADTS();
+		Log.i(TAG,"@오디오)MeidaReocorder으로 인코딩");
 		((AACADTSPacketizer)mPacketizer).setSamplingRate(mQuality.samplingRate);
 		super.encodeWithMediaRecorder();
 	}
@@ -197,7 +200,7 @@ public class AACStream extends AudioStream {
 	protected void encodeWithMediaCodec() throws IOException {
 
 		final int bufferSize = AudioRecord.getMinBufferSize(mQuality.samplingRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)*2;
-
+		Log.i(TAG,"@오디오)MeidaCodec으로 인코딩, 오디오버퍼사이즈"+bufferSize);
 		((AACLATMPacketizer)mPacketizer).setSamplingRate(mQuality.samplingRate);
 
 		mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, mQuality.samplingRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize);
@@ -229,7 +232,7 @@ public class AACStream extends AudioStream {
 							if (len ==  AudioRecord.ERROR_INVALID_OPERATION || len == AudioRecord.ERROR_BAD_VALUE) {
 								Log.e(TAG,"An error occured with the AudioRecord API !");
 							} else {
-								Log.i(TAG,"Pushing raw audio to the decoder: len="+len+" bs: "+inputBuffers[bufferIndex].capacity());
+							//	Log.i(TAG,"Pushing raw audio to the decoder: len="+len+" bs: "+inputBuffers[bufferIndex].capacity());
 								mMediaCodec.queueInputBuffer(bufferIndex, 0, len, System.nanoTime()/1000, 0);
 							}
 						}
@@ -259,6 +262,7 @@ public class AACStream extends AudioStream {
 				mAudioRecord.stop();
 				mAudioRecord.release();
 				mAudioRecord = null;
+
 			}
 			super.stop();
 		}
@@ -287,7 +291,7 @@ public class AACStream extends AudioStream {
 		try {
 			Field name = MediaRecorder.OutputFormat.class.getField("AAC_ADTS");
 			setOutputFormat(name.getInt(null));
-		}
+			}
 		catch (Exception ignore) {
 			setOutputFormat(6);
 		}
@@ -302,7 +306,7 @@ public class AACStream extends AudioStream {
 			return;
 		}
 
-		final String TESTFILE = Environment.getExternalStorageDirectory().getPath()+"/spydroid-test.adts";
+		final String TESTFILE = Environment.getExternalStorageDirectory().getPath()+"/AAC.adts";
 
 		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 			throw new IllegalStateException("No external storage or external storage not ready !");
@@ -324,6 +328,7 @@ public class AACStream extends AudioStream {
 		mMediaRecorder.setMaxDuration(1000);
 		mMediaRecorder.prepare();
 		mMediaRecorder.start();
+		Log.i(TAG,"MediaReocorder 시작");
 
 		// We record for 1 sec
 		// TODO: use the MediaRecorder.OnInfoListener

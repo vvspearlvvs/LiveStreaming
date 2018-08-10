@@ -100,6 +100,7 @@ public class TextureManager {
 	}
 	
 	public SurfaceTexture getSurfaceTexture() {
+		Log.i(TAG,"getSurfaceTexture");
 		return mSurfaceTexture;
 	}
 
@@ -193,6 +194,7 @@ public class TextureManager {
 		checkGlError("glTexParameter");
 		
 		mSurfaceTexture = new SurfaceTexture(mTextureID);
+		Log.i(TAG,"mSurface Texture가 null인지"+mSurfaceTexture);
 		return mSurfaceTexture;
 	}
 

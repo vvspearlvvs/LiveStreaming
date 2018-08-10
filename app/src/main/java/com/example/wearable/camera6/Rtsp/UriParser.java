@@ -22,6 +22,7 @@ import android.content.ContentValues;
 import android.hardware.Camera.CameraInfo;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 
 import com.example.wearable.camera6.Audio.AudioQuality;
 import com.example.wearable.camera6.Session.Session;
@@ -111,7 +112,7 @@ public class UriParser {
 				}
 
 				// MULTICAST -> the stream will be sent to a multicast group
-				// The default mutlicast address is 228.5.6.7, but the client can specify another
+				// The default mutlicast address is 228.5.6.7, but the client can specify another //230.0.0.1로 바꾸기
 				else if (paramName.equalsIgnoreCase("multicast")) {
 					if (paramValue!=null) {
 						try {
@@ -126,7 +127,7 @@ public class UriParser {
 					}
 					else {
 						// Default multicast address
-						builder.setDestination("228.5.6.7");
+						builder.setDestination("230.0.0.1"); //멀티캐스트할 그룹 주소 결정
 					}
 				}
 

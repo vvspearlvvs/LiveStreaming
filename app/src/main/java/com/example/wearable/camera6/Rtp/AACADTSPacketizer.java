@@ -55,6 +55,7 @@ public class AACADTSPacketizer extends AbstractPacketizer implements Runnable {
 		if (t==null) {
 			t = new Thread(this);
 			t.start();
+			Log.i(TAG, "@오디오)MediaRecorder로 인코딩할때 패킷:AACADTS");
 		}
 	}
 

@@ -15,6 +15,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
@@ -60,13 +61,27 @@ public class MainActivity extends Activity implements
         mSurfaceView = (SurfaceView) findViewById(R.id.surface);
         mSurfaceView.getHolder().addCallback(this);
         Log.i(TAG,"카메라로 비춘 화면 초기화");
-
-
         //
         initRtsp(); //카메라 화면을 가진 안드로이드가 클라이언트로, rtsp통신 초기화
 
+        mSurfaceView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                int action = event.getAction();
+                if(action == MotionEvent.ACTION_DOWN){ //손가락터치했을때
+                    mSession.switchCamera();
+                }
+                return true;
+            }
+        });
     }
 
+    public void onBackPressed(){
+        stopService(new Intent(getApplicationContext(), RtspServer.class));
+        Log.i(TAG,"뒤로가기 눌러서 RTSP 서비스종료");
+        Toast.makeText(this,"방송을 종료합니다.",Toast.LENGTH_SHORT).show();
+        super.onBackPressed();
+    }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) { }
@@ -172,6 +187,7 @@ public class MainActivity extends Activity implements
                 .setPreviewOrientation(90)
                 .setCallback(this)
                 .build();
+
         Log.i(TAG,"세션까지 연결"+mSession);
 
 

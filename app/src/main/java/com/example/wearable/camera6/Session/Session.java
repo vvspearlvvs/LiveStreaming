@@ -28,6 +28,7 @@ import android.util.Log;
 
 import com.example.wearable.camera6.Audio.AudioQuality;
 import com.example.wearable.camera6.Audio.AudioStream;
+import com.example.wearable.camera6.Stream.Stream;
 import com.example.wearable.camera6.Video.VideoQuality;
 import com.example.wearable.camera6.Video.VideoStream;
 import com.example.wearable.camera6.exceptions.CameraInUseException;
@@ -37,8 +38,8 @@ import com.example.wearable.camera6.exceptions.StorageUnavailableException;
 import com.example.wearable.camera6.gl.SurfaceView;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.UnknownHostException;
-
 /**
  * You should instantiate this class with the {@link SessionBuilder}.<br />
  * This is the class you will want to use to stream audio and or video to some peer using RTP.<br />
@@ -127,7 +128,7 @@ public class Session {
 		mHandler = new Handler(thread.getLooper());
 		mMainHandler = new Handler(Looper.getMainLooper());
 		mTimestamp = (uptime/1000)<<32 & (((uptime-((uptime/1000)*1000))>>32)/1000); // NTP timestamp
-		mOrigin = "127.0.0.1";
+		mOrigin = "127.0.0.1"; //원래 안드로이드 내부가 서버 주소 ?? origin이 웹35??127.0.0.1?? 192.168.0.35
 	}
 
 	/**
@@ -320,7 +321,9 @@ public class Session {
 	 */
 	public String getSessionDescription() {
 		StringBuilder sessionDescription = new StringBuilder();
-		Log.i(TAG,"get Sesion Description"+mDestination);
+		Log.i(TAG,"get Sesion Description Destination"+mDestination); //이 목적지를 직접 ip주소 말고 멀티캐스트하는 주소로
+		//#이 목적지가 직접 클라이언트의 ip가 아니라 멀티캐스트의 ip로 연결됙, 그 클라이언트는 멀티캐스트에 join한거다.
+
 		if (mDestination==null) {
 			throw new IllegalStateException("setDestination() has not been called !");
 		}
@@ -602,6 +605,7 @@ public class Session {
 					try {
 						mVideoStream.switchCamera();
 						postPreviewStarted();
+						Log.i(TAG,"현재 비디오 스트림의 카메라"+mVideoStream.getCamera());
 					} catch (CameraInUseException e) {
 						postError(ERROR_CAMERA_ALREADY_IN_USE , STREAM_VIDEO, e);
 					} catch (ConfNotSupportedException e) {
@@ -627,26 +631,6 @@ public class Session {
 		return mVideoStream != null ? mVideoStream.getCamera() : 0;
 
 	}
-
-	/** 
-	 * Toggles the LED of the phone if it has one.
-	 * You can get the current state of the flash with 
-	 * {@link Session#getVideoTrack()} and {@link VideoStream#getFlashState()}.
-	 **/
-	public void toggleFlash() {
-		mHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				if (mVideoStream != null) {
-					try {
-						mVideoStream.toggleFlash();
-					} catch (RuntimeException e) {
-						postError(ERROR_CAMERA_HAS_NO_FLASH, STREAM_VIDEO, e);
-					}
-				}
-			}
-		});
-	}	
 
 	/** Deletes all existing tracks & release associated resources. */
 	public void release() {

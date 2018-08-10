@@ -55,6 +55,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -137,12 +138,22 @@ public abstract class VideoStream extends MediaStream {
 		if (Camera.getNumberOfCameras() == 1) throw new IllegalStateException("Phone only has one camera !");
 		boolean streaming = mStreaming;
 		boolean previewing = mCamera!=null && mCameraOpenedManually; 
-		mCameraId = (mCameraId == CameraInfo.CAMERA_FACING_BACK) ? CameraInfo.CAMERA_FACING_FRONT : CameraInfo.CAMERA_FACING_BACK; 
+		mCameraId = (mCameraId == CameraInfo.CAMERA_FACING_BACK) ? CameraInfo.CAMERA_FACING_FRONT : CameraInfo.CAMERA_FACING_BACK;
+		Log.i(TAG,"현재 카메라 아이디(1:front 2: back)"+mCameraId);
 		setCamera(mCameraId);
 		stopPreview();
-		mFlashEnabled = false;
-		if (previewing) startPreview();
-		if (streaming) start(); 
+		Log.i(TAG,"화면전환 할려고 잠깐 preview stop");
+		if (previewing){
+			startPreview();
+			Log.i(TAG,"화면전환 할려고 잠깐멈춘거 다시 start preview");
+		}
+
+		if (streaming){
+			start();
+			Log.i(TAG,"화면전환 할려고 잠깐멈춘거 다시 start streaming");
+		}
+
+
 	}
 
 	/**
@@ -420,12 +431,9 @@ public abstract class VideoStream extends MediaStream {
 		if (mMode == MODE_MEDIACODEC_API_2) {
 			// Uses the method MediaCodec.createInputSurface to feed the encoder
 			encodeWithMediaCodecMethod2();
-			Log.i(TAG,"MODE_MEDIACODEC_API_2 : preview를 surface로 인코딩하는 모드");
-
 		} else {
 			// Uses dequeueInputBuffer to feed the encoder
 			encodeWithMediaCodecMethod1();
-			Log.i(TAG,"MODE_MEDIACODEC_API : preview를 버퍼로 받아서 인코딩하는 모드");
 		}
 	}	
 
@@ -435,19 +443,7 @@ public abstract class VideoStream extends MediaStream {
 	@SuppressLint("NewApi")
 	protected void encodeWithMediaCodecMethod1() throws RuntimeException, IOException {
 
-		Log.d(TAG,"한번에다 인코딩시작!Video encoded using the MediaCodec API with a buffer");
-
-		FileOutputStream fileoutputStream = null;
-		String fileName =  Environment.getExternalStorageDirectory().getAbsolutePath()+"/camera6.mp4";
-		DataOutputStream videostream = new DataOutputStream(fileoutputStream);
-		try {
-			fileoutputStream = new FileOutputStream(fileName);
-			Log.i(TAG, "인코딩된 OUTPUT이 저장될 파일 이름" + fileName);
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			Log.i(TAG, e.getMessage());
-		}
+		Log.i(TAG,"@비디오)MediaCodec으로 인코딩할때 : preview를 Buffer로 받아서 인코딩");
 
 		// Updates the parameters of the camera if needed
 		createCamera();
@@ -479,6 +475,7 @@ public abstract class VideoStream extends MediaStream {
 		mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
 		mMediaCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
 		mMediaCodec.start();
+		Log.i(TAG,"MediaCodec start");
 
 		Camera.PreviewCallback callback = new Camera.PreviewCallback() {
 			long now = System.nanoTime()/1000, oldnow = now, i=0;
@@ -489,23 +486,24 @@ public abstract class VideoStream extends MediaStream {
 				now = System.nanoTime()/1000;
 				if (i++>3) {
 					i = 0;
-					//Log.d(TAG,"Measured: "+1000000L/(now-oldnow)+" fps.");
 				}
 				try {
-					int bufferIndex = mMediaCodec.dequeueInputBuffer(500000);
+					//Log.i(TAG,"스트리밍무한반복###프리뷰데이터 받기! 크기"+data.length+",넣을 버퍼크기"+convertor.getBufferSize());
+					int bufferIndex = mMediaCodec.dequeueInputBuffer(500000); //500000
 					if (bufferIndex>=0) {
 						if(data.length>inputBuffers[bufferIndex].capacity()){
-							Log.i(TAG,"버퍼크기조정");
 							inputBuffers[bufferIndex] = ByteBuffer.allocate(data.length);
 						}
 						inputBuffers[bufferIndex].clear(); //inputBuffers[bufferIndex]가 inputbuffer이랑 같음.
 
-						if (data == null)
+                        if (data == null)
 							Log.e(TAG,"Symptom of the \"Callback buffer was to small\" problem...");
-						else
+						else{
 							convertor.convert(data, inputBuffers[bufferIndex]);
-
-						mMediaCodec.queueInputBuffer(bufferIndex, 0, inputBuffers[bufferIndex].position(), now, 0);
+							//Log.i(TAG,"스트리밍무한반복###프리뷰데이터->inputbuffer로 convert");
+							mMediaCodec.queueInputBuffer(bufferIndex, 0, inputBuffers[bufferIndex].position(), now, 0);
+							//Log.i(TAG,"스트리밍무한반복###inputBuffer->MeidaCodec에 적용"); //1280*720으로하면 여기 안됨
+						}
 
 					} else {
 						Log.e(TAG,"No buffer available !");
@@ -521,8 +519,9 @@ public abstract class VideoStream extends MediaStream {
 
 		// The packetizer encapsulates the bit stream in an RTP stream and send it over the network
 		mPacketizer.setInputStream(new MediaCodecInputStream(mMediaCodec));
-
+		Log.i(TAG,"MediaCodec에 들어온 inputstream->packet으로 만듬");
 		mPacketizer.start();
+		Log.i(TAG,"패킷전달");
 
 		mStreaming = true;
 
@@ -535,7 +534,7 @@ public abstract class VideoStream extends MediaStream {
 	@SuppressLint({ "InlinedApi", "NewApi" })	
 	protected void encodeWithMediaCodecMethod2() throws RuntimeException, IOException {
 
-		Log.d(TAG,"Video encoded using the MediaCodec API with a surface");
+		Log.i(TAG,"@비디오)MediaCodec으로 인코딩할때 : preview를 surface로 받아서 인코딩");
 
 		// Updates the parameters of the camera if needed
 		createCamera();
@@ -588,6 +587,7 @@ public abstract class VideoStream extends MediaStream {
 				mCameraLooper = Looper.myLooper();
 				try {
 					mCamera = Camera.open(mCameraId);
+					Log.i(TAG,mCameraId+"번 카메라 열기");
 				} catch (RuntimeException e) {
 					exception[0] = e;
 				} finally {
@@ -603,9 +603,9 @@ public abstract class VideoStream extends MediaStream {
 
 	protected synchronized void createCamera() throws RuntimeException {
 		if (mSurfaceView == null)
-			throw new InvalidSurfaceException("Invalid surface !");
+			throw new InvalidSurfaceException("Invalid surface ! 다시 createcamer, surface null");
 		if (mSurfaceView.getHolder() == null || !mSurfaceReady) 
-			throw new InvalidSurfaceException("Invalid surface !");
+			throw new InvalidSurfaceException("Invalid surface ! surface getholder가 null");
 
 		if (mCamera == null) {
 			openCamera();
@@ -629,26 +629,23 @@ public abstract class VideoStream extends MediaStream {
 			});
 
 			try {
-
-				// If the phone has a flash, we turn it on/off according to mFlashEnabled
-				// setRecordingHint(true) is a very nice optimization if you plane to only use the Camera for recording
+			    // setRecordingHint(true) is a very nice optimization if you plane to only use the Camera for recording
 				Parameters parameters = mCamera.getParameters();
-				if (parameters.getFlashMode()!=null) {
-					parameters.setFlashMode(mFlashEnabled?Parameters.FLASH_MODE_TORCH:Parameters.FLASH_MODE_OFF);
-				}
-				parameters.setRecordingHint(true);
 				mCamera.setParameters(parameters);
 				mCamera.setDisplayOrientation(mOrientation);
+			//	Log.i(TAG,"이거떄문에 예외처리되는건데"+mSurfaceView.getSurfaceTexture());
 
 				try {
 					if (mMode == MODE_MEDIACODEC_API_2) {
+						Log.i(TAG,"인코딩방법)mediaCodec방법으로");
 						mSurfaceView.startGLThread();
 						mCamera.setPreviewTexture(mSurfaceView.getSurfaceTexture());
 					} else {
 						mCamera.setPreviewDisplay(mSurfaceView.getHolder());
 					}
 				} catch (IOException e) {
-					throw new InvalidSurfaceException("Invalid surface !");
+					Log.i(TAG,"스트리밍 하면서 화면전환 불가능?"+e.getMessage());
+					throw new InvalidSurfaceException("Invalid surface ! 스트리밍 중에는 화면전환을 할 수 없습니다.");
 				}
 
 			} catch (RuntimeException e) {
@@ -689,11 +686,12 @@ public abstract class VideoStream extends MediaStream {
 		Parameters parameters = mCamera.getParameters();
 		mQuality = VideoQuality.determineClosestSupportedResolution(parameters, mQuality);
 		int[] max = VideoQuality.determineMaximumSupportedFramerate(parameters);
+		Log.i(TAG,"내가 설정한 카메라프리뷰의 해상도"+mQuality);
 		
-	/*	double ratio = (double)mQuality.resX/(double)mQuality.resY;
-		mSurfaceView.requestAspectRatio(ratio);*/
+		double ratio = (double)mQuality.resX/(double)mQuality.resY;
+		mSurfaceView.requestAspectRatio(ratio);
 		
-		parameters.setPreviewFormat(mCameraImageFormat);
+		parameters.setPreviewFormat(mCameraImageFormat); //NV21형식
 		parameters.setPreviewSize(mQuality.resX, mQuality.resY);
 		parameters.setPreviewFpsRange(max[0], max[1]);
 
@@ -701,6 +699,7 @@ public abstract class VideoStream extends MediaStream {
 			mCamera.setParameters(parameters);
 			mCamera.setDisplayOrientation(mOrientation);
 			mCamera.startPreview();
+			Log.i(TAG,"START PREVIEW");
 			mPreviewStarted = true;
 			mUpdated = true;
 		} catch (RuntimeException e) {

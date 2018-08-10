@@ -125,15 +125,19 @@ public class H264Stream extends VideoStream {
 
 	@SuppressLint("NewApi")
 	private MP4Config testMediaCodecAPI() throws RuntimeException, IOException {
+		//MediaCodec사용하기
+		Log.i(TAG,"@비디오)MediaCodec으로 인코딩 테스트");
 		createCamera();
 		updateCamera();
 		try {
-			if (mQuality.resX>=640) { //원래 640기준
-				// Using the MediaCodec API with the buffer method for high resolutions is too slow
-				mMode = MODE_MEDIARECORDER_API;
-				Log.i(TAG,"640이상 해상도일때:MedaiReocorder 모드"+mMode);
-			}
+//			if (mQuality.resX>=1440) { //원래 640기준
+//				// Using the MediaCodec API with the buffer method for high resolutions is too slow
+//				mMode = MODE_MEDIARECORDER_API;
+//				Log.i(TAG,"640이상일때) 지금해상도"+mQuality.resX+"x"+mQuality.resY+"Mediarecorder모드"+mMode);
+//			}
 			EncoderDebugger debugger = EncoderDebugger.debug(mSettings, mQuality.resX, mQuality.resY);
+			Log.i(TAG," 지금해상도"+mQuality.resX+"x"+mQuality.resY+"Mediarecorder모드"+mMode);
+
 			return new MP4Config(debugger.getB64SPS(), debugger.getB64PPS());
 		} catch (Exception e) {
 			// Fallback on the old streaming method using the MediaRecorder API
@@ -145,6 +149,7 @@ public class H264Stream extends VideoStream {
 
 	// Should not be called by the UI thread
 	private MP4Config testMediaRecorderAPI() throws RuntimeException, IOException {
+		//MediaRecorder사용하기
 		String key = PREF_PREFIX+"h264-mr-"+mRequestedQuality.framerate+","+mRequestedQuality.resX+","+mRequestedQuality.resY;
 
 		if (mSettings != null && mSettings.contains(key) ) {
@@ -156,8 +161,7 @@ public class H264Stream extends VideoStream {
 			throw new StorageUnavailableException("No external storage or external storage not ready !");
 		}
 
-		final String TESTFILE = Environment.getExternalStorageDirectory().getPath()+"/spydroid-test.mp4";
-
+		final String TESTFILE = Environment.getExternalStorageDirectory().getPath()+"/camerfile.mp4";
 		Log.i(TAG,"H264 테스팅 파일 저장함. Testing H264 support... Test file saved at: "+TESTFILE);
 
 		try {

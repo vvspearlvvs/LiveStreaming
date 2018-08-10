@@ -19,6 +19,7 @@
 package com.example.wearable.camera6.rtcp;
 
 import android.os.SystemClock;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,11 +36,12 @@ import static com.example.wearable.camera6.Rtp.RtpSocket.TRANSPORT_UDP;
  */
 public class SenderReport {
 
+	public static final String TAG = "SenderReport";
 	public static final int MTU = 1500;
 
 	private static final int PACKET_LENGTH = 28;
 	
-	private MulticastSocket usock;
+	public MulticastSocket usock;
 	private DatagramPacket upack;
 
 	private int mTransport;
@@ -84,11 +86,20 @@ public class SenderReport {
 
 		try {
 			usock = new MulticastSocket();
+			//Log.i(TAG,"#rtcp에서 multicast 소켓을 만듬"+usock);
+            upack = new DatagramPacket(mBuffer, 1);
+           // Log.i(TAG,"rtcp에서 multicast로 보낼 패킷들"+upack);
+			/* ##
+			InetAddress ia = InetAddress.getByName("224.0.0.1");
+			upack = new DatagramPacket(mBuffer, 1,ia,1900);
+			Log.i("SenderReport","#멀티캐스트 그룹ip로 스트림 보낸다.");*/
+
 		} catch (IOException e) {
 			// Very unlikely to happen. Means that all UDP ports are already being used
 			throw new RuntimeException(e.getMessage());
 		}
-		upack = new DatagramPacket(mBuffer, 1);
+
+
 
 		// By default we sent one report every 3 secconde
 		interval = 3000;
@@ -206,7 +217,8 @@ public class SenderReport {
 		setLong(rtpts, 16, 20);
 		if (mTransport == TRANSPORT_UDP) {
 			upack.setLength(PACKET_LENGTH);
-			usock.send(upack);		
+			usock.send(upack);
+		//	Log.i("SenderReport","#Multicast Socket으로(그룹ip로) udp 데이터 보냄");
 		} else {
 			synchronized (mOutputStream) {
 				try {

@@ -93,6 +93,7 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, O
 	}
 	
 	public SurfaceTexture getSurfaceTexture() {
+		Log.i(TAG,"getsurface TEXTURE 호출");
 		return mTextureManager.getSurfaceTexture();
 	}
 
@@ -112,23 +113,25 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, O
 	}
 
 	public void startGLThread() {
-		Log.d(TAG,"Thread started.");
+		Log.i(TAG,"open GL Thread started.");
 		if (mTextureManager == null) {
 			mTextureManager = new TextureManager();
+			Log.i(TAG,"textManager가 없어서 객체 만듦");
 		}
 		if (mTextureManager.getSurfaceTexture() == null) {
 			mThread = new Thread(SurfaceView.this);
 			mRunning = true;
 			mThread.start();
 			mLock.acquireUninterruptibly();
+			Log.i(TAG,"textManager의 getSurfaceTexture가 없어서 SurfaceView의 스레드 시작");
 		}
 	}
 
 	@Override
 	public void run() {
 
-		mViewSurfaceManager = new SurfaceManager(getHolder().getSurface());
-		mViewSurfaceManager.makeCurrent();
+		//mViewSurfaceManager = new SurfaceManager(getHolder().getSurface());
+		//mViewSurfaceManager.makeCurrent();
 		mTextureManager.createTexture().setOnFrameAvailableListener(this);
 
 		mLock.release();
@@ -198,6 +201,7 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, O
 		if (mVARM.getAspectRatio() > 0 && mAspectRatioMode == ASPECT_RATIO_PREVIEW) {
 			mVARM.measure(widthMeasureSpec, heightMeasureSpec);
 			setMeasuredDimension(mVARM.getMeasuredWidth(), mVARM.getMeasuredHeight());
+			Log.i(TAG,"안드로이드 기종의 크기"+mVARM.getMeasuredWidth()+"X"+mVARM.getMeasuredHeight());
 		} else {
 			super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 		}

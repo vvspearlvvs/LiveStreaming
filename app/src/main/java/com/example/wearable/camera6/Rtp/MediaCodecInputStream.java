@@ -78,8 +78,8 @@ public class MediaCodecInputStream extends InputStream {
 					if (mIndex>=0 ){
 						//Log.d(TAG,"Index: "+mIndex+" Time: "+mBufferInfo.presentationTimeUs+" size: "+mBufferInfo.size);
 						mBuffer = mBuffers[mIndex];
-						Log.i(TAG,"인코딩한 버퍼 데이터"+mBuffer);
-						Log.i(TAG,"인코딩한 데이터 전송중"+new byte[mBuffer.remaining()].length);
+					//	Log.i(TAG,"인코딩한 버퍼 데이터"+mBuffer);
+					//	Log.i(TAG,"인코딩한 데이터 전송중"+new byte[mBuffer.remaining()].length);
 
 						mBuffer.position(mBufferInfo.offset); //원래0
                         mBuffer.limit(mBufferInfo.offset+mBufferInfo.size);
@@ -87,11 +87,14 @@ public class MediaCodecInputStream extends InputStream {
 
 					} else if (mIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
 						mBuffers = mMediaCodec.getOutputBuffers();
+						Log.i(TAG,"Index -3일떄");
 					} else if (mIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
 						mMediaFormat = mMediaCodec.getOutputFormat();
-						Log.i(TAG,mMediaFormat.toString());
+						Log.i(TAG,"Index -2일때"+mMediaFormat.toString());
 					} else if (mIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
 						Log.i(TAG,"다시시작 No buffer available..."+mIndex);
+						mIndex = mMediaCodec.dequeueOutputBuffer(mBufferInfo, 1000000);
+
 						//return 0;
 					} else {
 						Log.e(TAG,"Message: "+mIndex);

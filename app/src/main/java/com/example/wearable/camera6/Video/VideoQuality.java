@@ -34,7 +34,9 @@ public class VideoQuality {
 	public final static String TAG = "VideoQuality";
 	
 	/** Default video stream quality. */
-	public final static VideoQuality DEFAULT_VIDEO_QUALITY = new VideoQuality(320,240,30,500000); //640이하일때만 가능? 처음 176,144
+	public final static VideoQuality DEFAULT_VIDEO_QUALITY = new VideoQuality(640,640,30,50000000); //640이하일때만 가능? 처음 176,144 -> 최대 320,240 ,framerate30
+	//framerate, bitrate늘려보기50,0000
+	//해상도 결정은 비트레이트
 
 	/**	Represents a quality for a video stream. */ 
 	public VideoQuality() {}
@@ -106,7 +108,7 @@ public class VideoQuality {
 	public static VideoQuality determineClosestSupportedResolution(Camera.Parameters parameters, VideoQuality quality) {
 		VideoQuality v = quality.clone();
 		int minDist = Integer.MAX_VALUE;
-		String supportedSizesStr = "Supported resolutions: ";
+		String supportedSizesStr = "지원하는 해상도 종류";
 		List<Size> supportedSizes = parameters.getSupportedPreviewSizes();
 		for (Iterator<Size> it = supportedSizes.iterator(); it.hasNext();) {
 			Size size = it.next();

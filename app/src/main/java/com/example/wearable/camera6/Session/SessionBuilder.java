@@ -78,6 +78,7 @@ public class SessionBuilder {
 	private SurfaceView mSurfaceView = null;
 	private String mOrigin = null;
 	private String mDestination = null;
+	// 아예 여기에서 선언하면 바뀜 setup destination바꿀때, 아예처음부터 목적지를 그룹ip로
 	private Session.Callback mCallback = null;
 
 	// Removes the default public constructor

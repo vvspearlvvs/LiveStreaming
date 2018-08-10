@@ -12,20 +12,12 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!--
-             <ToggleButton
-                 android:id="@+id/button"
-                 android:layout_width="181dp"
-                 android:layout_height="wrap_content"
-                 android:layout_gravity="center"
-                 android:textOff="Streaming 시작"
-                 android:textOn="Streaming 끝"/>-->
-
 
         <com.example.wearable.camera6.gl.SurfaceView
             android:id="@+id/surface"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
 
     </LinearLayout>
 

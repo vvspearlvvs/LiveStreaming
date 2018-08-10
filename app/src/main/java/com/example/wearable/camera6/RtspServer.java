@@ -23,9 +23,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.BindException;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -181,6 +184,8 @@ public class RtspServer extends Service {
         if (mEnabled && mListenerThread == null) {
             try {
                 mListenerThread = new RequestListener();
+                //첫번째 스레드시작
+
             } catch (Exception e) {
                 mListenerThread = null;
             }
@@ -322,22 +327,27 @@ public class RtspServer extends Service {
     protected Session handleRequest(String uri, Socket client) throws IllegalStateException, IOException {
         Session session = UriParser.parse(uri);
         Log.i(TAG,"세션에서 파싱할 uri"+uri);
-        session.setOrigin(client.getLocalAddress().getHostAddress());
-        Log.i(TAG,"세션에서 정한 Orign"+client.getLocalAddress().getHostAddress());
+       // session.setOrigin("192.168.0.35");
+       session.setOrigin(client.getLocalAddress().getHostAddress()); //원래는 클라이언트 자체의 주소인데
+     //   Log.i(TAG,"#출발지는 클라이언트 자세의 주소"+client.getLocalAddress().getHostAddress());
+      //  Log.i(TAG,"#목적지는 mutlicast라서 그룹ip주소"+session.getDestination());
+
         if (session.getDestination()==null) {
             session.setDestination(client.getInetAddress().getHostAddress());
+          //  Log.i(TAG,"#세션이 연결되면 가야할 목적지1 "+session.getDestination());
         }
         return session;
     }
 
-    class RequestListener extends Thread implements Runnable {
+    class RequestListener extends Thread implements Runnable{  //이게 multiserverThread로 보면
 
         private final ServerSocket mServer;
 
         public RequestListener() throws IOException {
             try {
-                mServer = new ServerSocket(mPort);
-                start(); //스레드시작
+                //#
+                mServer = new ServerSocket(mPort); //5554로 서버소켓연결
+                start(); //서버소켓 스레드시작
                 Log.i(TAG,"서버응답"+mServer);
             } catch (BindException e) {
                 Log.e(TAG,"Port already in use !");
@@ -348,8 +358,10 @@ public class RtspServer extends Service {
 
         public void run() {
             Log.i(TAG,"RTSP server listening on port "+mServer.getLocalPort());
+           //##!Thread.interrupted()
             while (!Thread.interrupted()) {
                 try {
+                //    Log.i(TAG,"###worker thead시작");
                     new WorkerThread(mServer.accept()).start();
                 } catch (SocketException e) {
                     break;
@@ -377,6 +389,7 @@ public class RtspServer extends Service {
         private final Socket mClient;
         private final OutputStream mOutput;
         private final BufferedReader mInput;
+      // private MultiClient multiClient;
 
         // Each client has an associated session
         private Session mSession;
@@ -386,12 +399,14 @@ public class RtspServer extends Service {
             mOutput = client.getOutputStream();
             mClient = client;
             mSession = new Session();
+            // multiClient = new MultiClient(client.getInetAddress().toString());
         }
 
         public void run() {
             Request request;
             Response response;
 
+            //클라이언트랑 연결되기 시작하는 부분
             Log.i(TAG, "Connection from "+mClient.getInetAddress().getHostAddress());
 
             ToastHandler.post(new Runnable() {
@@ -400,7 +415,9 @@ public class RtspServer extends Service {
                     Toast.makeText(getApplicationContext(),"접속한 주소"+mClient.getInetAddress().getHostAddress(),Toast.LENGTH_SHORT).show();
                 }
             });
-            while (!Thread.interrupted()) {
+
+            //!Thread.interrupted()
+            while (true) {
 
                 request = null;
                 response = null;
@@ -535,7 +552,7 @@ public class RtspServer extends Service {
 
                 ssrc = mSession.getTrack(trackId).getSSRC();
                 src = mSession.getTrack(trackId).getLocalPorts();
-                destination = mSession.getDestination();
+                destination = mSession.getDestination(); //이때 목적지가 직접 클라이언트말고..............................0
 
                 mSession.getTrack(trackId).setDestinationPorts(p1, p2);
 
@@ -545,7 +562,11 @@ public class RtspServer extends Service {
                     postMessage(MESSAGE_STREAMING_STARTED);
                 }
 
-                response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(destination).isMulticastAddress() ? "multicast" : "unicast") +
+
+                //Log.i(TAG,"########## destination 이 서버에서 보낼 클라이언트 주소?"+destination);
+
+                //여기서 설정하는건 rtsp가 받앗을때나오는 내용
+             response.attributes = "Transport: RTP/AVP/UDP;" + (InetAddress.getByName(destination).isMulticastAddress() ? "multicast" : "unicast") +
                         ";destination=" + mSession.getDestination() +
                         ";client_port=" + p1 + "-" + p2 +
                         ";server_port=" + src[0] + "-" + src[1] +
@@ -638,7 +659,7 @@ public class RtspServer extends Service {
             if (line==null) throw new SocketException("Client disconnected");
 
             // It's not an error, it's just easier to follow what's happening in logcat with the request in red
-            Log.e(TAG,"Request "+ request.method+" "+request.uri + request.headers);
+            Log.e(TAG,"Request "+ request.method+request.uri + request.headers);
 
             return request;
         }

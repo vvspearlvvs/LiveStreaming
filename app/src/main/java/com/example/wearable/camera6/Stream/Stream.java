@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.example.wearable.camera6.Session;
+package com.example.wearable.camera6.Stream;
 
 import java.io.IOException;
 import java.io.OutputStream;
